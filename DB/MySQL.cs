@@ -5,7 +5,7 @@ namespace Malshinon.DB
     public class MySQL
     {
         private string _ConnectionString = "server=localhost;port=3306;user=root;password=;database=malshinon;SslMode=None";
-        public MySqlConnection OpenConnection()
+        public MySqlConnection? OpenConnection()
         {
             MySqlConnection connection = new MySqlConnection(_ConnectionString);
             try
