@@ -45,5 +45,68 @@ namespace Malshinon.DAL
                 return null;
             }
         }
+
+
+        public People GetPersonById(int personId)
+        {
+            try
+            {
+                using (var connection = _db.OpenConnection())
+                {
+                    string query = "SELECT * FROM people WHERE Id = @Id;";
+
+                    using (var command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Id", personId);
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new People
+                                {
+                                    Id = reader.GetInt32("Id"),
+                                    FirstName = reader.GetString("FirstName"),
+                                    LastName = reader.GetString("LastName"),
+                                    SecetCode = reader.GetString("SecetCode"),
+                                    Type = reader.GetString("Type"),
+                                    NumReports = reader.GetInt32("NumReports"),
+                                    NumMentions = reader.GetInt32("NumMentions")
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error retrieving person: " + ex.Message);
+            }
+
+            return null;
+        }
+        
+        public People IncrementReportCount(int personId)
+        {
+            try
+            {
+                using (var connection = _db.OpenConnection())
+                {
+                    string query = "UPDATE people SET num_reports = num_reports + 1 WHERE Id = @Id;";
+
+                    using (var command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Id", personId);
+                        command.ExecuteNonQuery();
+                    }
+
+                    return GetPersonById(personId);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error incrementing report count: " + ex.Message);
+                return null;
+            }
+        }
     }
 }
