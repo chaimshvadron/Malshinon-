@@ -153,7 +153,7 @@ namespace Malshinon.DAL
                         command.ExecuteNonQuery();
                     }
 
-                    return GetPersonById(personId);
+                    return GetPersonById(personId); 
                 }
             }
             catch (Exception ex)
