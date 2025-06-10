@@ -7,7 +7,7 @@ namespace Malshinon.models
         public string? LastName { get; set; }
         public string? SecetCode { get; set; }
         public string? Type { get; set; }
-        public string? NumReports { get; set; }
-        public string? NumMentions { get; set; }
+        public int? NumReports { get; set; }
+        public int? NumMentions { get; set; }
     }
 }
