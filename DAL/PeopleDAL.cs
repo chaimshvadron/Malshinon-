@@ -16,28 +16,33 @@ namespace Malshinon.DAL
             _db = new MySQL();
         }
 
+
         public People? AddNewPeople(People peopl)
         {
             try
             {
                 using (var connection = _db.OpenConnection())
                 {
-                    string query = "INSERT INTO people (FirstName, LastName, SecetCode, Type, NumReports, NumMentions) " +
-                                   "VALUES (@FirstName, @LastName, @SecetCode, @Type, @NumReports, @NumMentions);";
+                    string query = "INSERT INTO people (first_name, last_name, secret_code, type, num_reports, num_mentions) " +
+                                   "VALUES (@first_name, @last_name, @secret_code, @type, @num_reports, @num_mentions);";
 
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@FirstName", peopl.FirstName);
-                        command.Parameters.AddWithValue("@LastName", peopl.LastName);
-                        command.Parameters.AddWithValue("@SecetCode", peopl.SecetCode);
-                        command.Parameters.AddWithValue("@Type", peopl.Type);
-                        command.Parameters.AddWithValue("@NumReports", peopl.NumReports);
-                        command.Parameters.AddWithValue("@NumMentions", peopl.NumMentions);
+                        command.Parameters.AddWithValue("@first_name", peopl.FirstName);
+                        command.Parameters.AddWithValue("@last_name", peopl.LastName);
+                        command.Parameters.AddWithValue("@secret_code", peopl.SecetCode);
+                        command.Parameters.AddWithValue("@type", peopl.Type);
+                        command.Parameters.AddWithValue("@num_reports", peopl.NumReports);
+                        command.Parameters.AddWithValue("@num_mentions", peopl.NumMentions);
 
                         command.ExecuteNonQuery();
+                        long insertedId = command.LastInsertedId;
+                        if (insertedId > 0)
+                        {
+                            
+                            return GetPersonById((int)insertedId);
+                        }
                     }
-
-                    return peopl;
                 }
             }
             catch (Exception ex)
@@ -45,6 +50,7 @@ namespace Malshinon.DAL
                 Console.WriteLine("Error adding new person: " + ex.Message);
                 return null;
             }
+            return null;
         }
 
 
@@ -54,25 +60,16 @@ namespace Malshinon.DAL
             {
                 using (var connection = _db.OpenConnection())
                 {
-                    string query = "SELECT * FROM people WHERE Id = @Id;";
+                    string query = "SELECT * FROM people WHERE id = @id;";
 
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@Id", personId);
+                        command.Parameters.AddWithValue("@id", personId);
                         using (var reader = command.ExecuteReader())
                         {
                             if (reader.Read())
                             {
-                                return new People
-                                {
-                                    Id = reader.GetInt32("Id"),
-                                    FirstName = reader.GetString("FirstName"),
-                                    LastName = reader.GetString("LastName"),
-                                    SecetCode = reader.GetString("SecetCode"),
-                                    Type = reader.GetString("Type"),
-                                    NumReports = reader.GetInt32("NumReports"),
-                                    NumMentions = reader.GetInt32("NumMentions")
-                                };
+                                return PeopleMapper.MapFromReader(reader);
                             }
                         }
                     }
@@ -86,31 +83,23 @@ namespace Malshinon.DAL
             return null;
         }
 
+
         public People? GetPersonBySecretCode(string secretCode)
         {
             try
             {
                 using (var connection = _db.OpenConnection())
                 {
-                    string query = "SELECT * FROM people WHERE SecetCode = @SecetCode;";
+                    string query = "SELECT * FROM people WHERE secret_code = @secret_code;";
 
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@SecetCode", secretCode);
+                        command.Parameters.AddWithValue("@secret_code", secretCode);
                         using (var reader = command.ExecuteReader())
                         {
                             if (reader.Read())
                             {
-                                return new People
-                                {
-                                    Id = reader.GetInt32("Id"),
-                                    FirstName = reader.GetString("FirstName"),
-                                    LastName = reader.GetString("LastName"),
-                                    SecetCode = reader.GetString("SecetCode"),
-                                    Type = reader.GetString("Type"),
-                                    NumReports = reader.GetInt32("NumReports"),
-                                    NumMentions = reader.GetInt32("NumMentions")
-                                };
+                                return PeopleMapper.MapFromReader(reader);
                             }
                         }
                     }
@@ -124,17 +113,18 @@ namespace Malshinon.DAL
             return null;
         }
 
+
         public People? IncrementReportCount(int personId)
         {
             try
             {
                 using (var connection = _db.OpenConnection())
                 {
-                    string query = "UPDATE people SET num_reports = num_reports + 1 WHERE Id = @Id;";
+                    string query = "UPDATE people SET num_reports = num_reports + 1 WHERE id = @id;";
 
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@Id", personId);
+                        command.Parameters.AddWithValue("@id", personId);
                         command.ExecuteNonQuery();
                     }
 
@@ -148,17 +138,18 @@ namespace Malshinon.DAL
             }
         }
 
+
         public People? IncrementMentionCount(int personId)
         {
             try
             {
                 using (var connection = _db.OpenConnection())
                 {
-                    string query = "UPDATE people SET num_mentions = num_mentions + 1 WHERE Id = @Id;";
+                    string query = "UPDATE people SET num_mentions = num_mentions + 1 WHERE id = @id;";
 
                     using (var command = new MySqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@Id", personId);
+                        command.Parameters.AddWithValue("@id", personId);
                         command.ExecuteNonQuery();
                     }
 
