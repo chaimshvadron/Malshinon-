@@ -1,5 +1,4 @@
-﻿using Malshinon.DB;
-using Malshinon.models;
+﻿using Malshinon.ConsoleApp;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -9,8 +8,7 @@ namespace Malshinon
     {
         static void Main(string[] args)
         {
-            MySQL db = new MySQL();
-            db.OpenConnection();
+           ReportDialog.Show();
         }
 
     }
