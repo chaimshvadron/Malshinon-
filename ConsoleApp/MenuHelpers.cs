@@ -38,5 +38,19 @@ namespace Malshinon.ConsoleApp
                 Console.WriteLine($"Name: {p.FirstName} {p.LastName}, Mention Count: {p.NumMentions}");
             }
         }
+        public static void ShowAlerts()
+        {
+            var alerts = Malshinon.Services.AlertService.GetAlerts();
+            Console.WriteLine("\nCurrent Alerts:");
+            if (alerts.Count == 0)
+            {
+                Console.WriteLine("No alerts found.");
+                return;
+            }
+            foreach (var alert in alerts)
+            {
+                Console.WriteLine($"Alert #{alert.Id}: TargetId={alert.TargetId}, Window=({alert.WindowStart:HH:mm} - {alert.WindowEnd:HH:mm}), Reason={alert.Reason}, CreatedAt={alert.CreatedAt:yyyy-MM-dd HH:mm}");
+            }
+        }
     }
 }

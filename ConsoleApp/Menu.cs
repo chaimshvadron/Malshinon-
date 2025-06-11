@@ -15,6 +15,7 @@ namespace Malshinon.ConsoleApp
                 Console.WriteLine("1. Report");
                 Console.WriteLine("2. List all potential agents");
                 Console.WriteLine("3. List all dangerous targets");
+                Console.WriteLine("4. Show current alerts");
                 Console.WriteLine("0. Exit");
                 Console.Write("Select an option: ");
                 var input = Console.ReadLine();
@@ -28,6 +29,9 @@ namespace Malshinon.ConsoleApp
                         break;
                     case "3":
                         MenuHelpers.ShowDangerousTargets();
+                        break;
+                    case "4":
+                        MenuHelpers.ShowAlerts();
                         break;
                     case "0":
                         return;
