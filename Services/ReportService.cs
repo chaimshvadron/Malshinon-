@@ -2,7 +2,6 @@ using Malshinon.DB;
 using Malshinon.models;
 using Malshinon.Utils;
 using Malshinon.DAL;
-using ZstdSharp.Unsafe;
 
 namespace Malshinon.Services
 {
@@ -11,7 +10,6 @@ namespace Malshinon.Services
         private PeopleDAL _peopleDal = new PeopleDAL();
         private IntelReportsDAL _intelReportsDal = new IntelReportsDAL();
 
-        // Submit report - receives ready People objects
         public void SubmitReport(People reporter, People target, string reportText)
         {
             IntelReport report = new IntelReport
@@ -23,13 +21,19 @@ namespace Malshinon.Services
             };
             _intelReportsDal.AddNewIntelReport(report);
 
-            _peopleDal.IncrementReportCount(reporter.Id);
-            _peopleDal.IncrementMentionCount(target.Id);
+            var PersonReorter = _peopleDal.IncrementReportCount(reporter.Id);
+            var PersonTaeget = _peopleDal.IncrementMentionCount(target.Id);
+
+            if (PersonReorter != null)
+                EnsureRoleUpgrade(PersonReorter, "reporter");
+            if (PersonTaeget != null)
+                EnsureRoleUpgrade(PersonTaeget, "target");
 
             Console.WriteLine("Report saved successfully.");
+            CheckAndUpgradePotentialAgent(PersonReorter);
+            CheckAndMarkDangerous(PersonTaeget);
         }
 
-        // Helper: identify or create person by secret code, first name, last name, and type
         public People? GetOrCreatePerson(string? code, string? firstName, string? lastName, string type)
         {
             People? person = null;
@@ -38,12 +42,6 @@ namespace Malshinon.Services
             if (!string.IsNullOrEmpty(code))
             {
                 person = _peopleDal.GetPersonBySecretCode(code);
-
-                // If found, update type to "both" if needed
-                if (person != null && person.Type != type && person.Type != "both")
-                {
-                    person = _peopleDal.UpdateType(person.Id, "both");
-                }
             }
 
             // 2. If not found, ask for details and create new
@@ -73,6 +71,38 @@ namespace Malshinon.Services
             }
 
             return person;
+        }
+        
+        private void EnsureRoleUpgrade(People person, string roleToAdd)
+        {
+            if (person.Type == "both" || person.Type == "potential_agent")
+                return;
+
+            if ((person.Type == "reporter" && roleToAdd == "target") ||
+                (person.Type == "target" && roleToAdd == "reporter"))
+            {
+                _peopleDal.UpdateType(person.Id, "both");
+            }
+        }
+
+        // בודק אם צריך לשדרג את ה-reporter ל"potential_agent"
+        private void CheckAndUpgradePotentialAgent(People? person)
+        {
+            if (person != null && person.NumReports >= 10 && person.Type == "reporter" && _intelReportsDal.GetAverageReportLengthByReporterId(person.Id) > 100)
+            {
+                Console.WriteLine($"Warning: {person.FirstName} {person.LastName} has been reported {person.NumReports} times!");
+                _peopleDal.UpdateType(person.Id, "potential_agent");
+            }
+        }
+
+        // בודק אם צריך לסמן את ה-target כ-dangerous
+        private void CheckAndMarkDangerous(People? person)
+        {
+            if (person != null && person.NumMentions >= 20 && !person.DangerStatus)
+            {
+                _peopleDal.UpdateDangerStatus(person.Id, true);
+                Console.WriteLine($"Warning: {person.FirstName} {person.LastName} is now marked as dangerous!");
+            }
         }
 
     }

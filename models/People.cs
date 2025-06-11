@@ -9,5 +9,6 @@ namespace Malshinon.models
         public string? Type { get; set; }
         public int? NumReports { get; set; }
         public int? NumMentions { get; set; }
+        public bool DangerStatus { get; set; } = false;
     }
 }
