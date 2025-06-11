@@ -2,7 +2,6 @@ using Malshinon.DB;
 using Malshinon.models;
 using Malshinon.Utils;
 using Malshinon.DAL;
-using ZstdSharp.Unsafe;
 
 namespace Malshinon.Services
 {
@@ -31,17 +30,8 @@ namespace Malshinon.Services
                 EnsureRoleUpgrade(PersonTaeget, "target");
 
             Console.WriteLine("Report saved successfully.");
-            if (PersonReorter != null && PersonReorter.NumReports >= 10 && PersonReorter.Type != "potential_agent")
-            {
-                Console.WriteLine($"Warning: {PersonReorter.FirstName} {PersonReorter.LastName} has been reported {PersonReorter.NumReports} times!");
-                _peopleDal.UpdateType(PersonReorter.Id, "potential_agent");
-            }
-
-            if (PersonTaeget != null && PersonTaeget.NumMentions >= 20 && !PersonTaeget.DangerStatus)
-            {
-                _peopleDal.UpdateDangerStatus(PersonTaeget.Id, true);
-                Console.WriteLine($"Warning: {PersonTaeget.FirstName} {PersonTaeget.LastName} is now marked as dangerous!");
-            }
+            CheckAndUpgradePotentialAgent(PersonReorter);
+            CheckAndMarkDangerous(PersonTaeget);
         }
 
         public People? GetOrCreatePerson(string? code, string? firstName, string? lastName, string type)
@@ -94,6 +84,25 @@ namespace Malshinon.Services
             }
         }
 
+        // בודק אם צריך לשדרג את ה-reporter ל"potential_agent"
+        private void CheckAndUpgradePotentialAgent(People? person)
+        {
+            if (person != null && person.NumReports >= 10 && person.Type == "reporter" && _intelReportsDal.GetAverageReportLengthByReporterId(person.Id) > 100)
+            {
+                Console.WriteLine($"Warning: {person.FirstName} {person.LastName} has been reported {person.NumReports} times!");
+                _peopleDal.UpdateType(person.Id, "potential_agent");
+            }
+        }
+
+        // בודק אם צריך לסמן את ה-target כ-dangerous
+        private void CheckAndMarkDangerous(People? person)
+        {
+            if (person != null && person.NumMentions >= 20 && !person.DangerStatus)
+            {
+                _peopleDal.UpdateDangerStatus(person.Id, true);
+                Console.WriteLine($"Warning: {person.FirstName} {person.LastName} is now marked as dangerous!");
+            }
+        }
 
     }
 }

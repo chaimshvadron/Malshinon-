@@ -78,5 +78,31 @@ namespace Malshinon.DAL
             }
             return null;
         }
+
+        public double? GetAverageReportLengthByReporterId(int reporterId)
+        {
+            try
+            {
+                using (var connection = _db.OpenConnection())
+                {
+                    string query = "SELECT AVG(CHAR_LENGTH(text)) AS avg_length FROM intel_reports WHERE reporter_id = @reporter_id;";
+                    using (var command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@reporter_id", reporterId);
+                        var result = command.ExecuteScalar();
+                        if (result != null)
+                        {
+                            Console.WriteLine($"Average report length for reporter {reporterId}: {result}");
+                            return Convert.ToDouble(result);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error calculating average report length: " + ex.Message);
+            }
+            return null;
+        }
     }
 }
