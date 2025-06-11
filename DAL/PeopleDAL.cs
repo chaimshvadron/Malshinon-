@@ -39,7 +39,7 @@ namespace Malshinon.DAL
                         long insertedId = command.LastInsertedId;
                         if (insertedId > 0)
                         {
-                            
+
                             return GetPersonById((int)insertedId);
                         }
                     }
@@ -153,12 +153,37 @@ namespace Malshinon.DAL
                         command.ExecuteNonQuery();
                     }
 
-                    return GetPersonById(personId); 
+                    return GetPersonById(personId);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error incrementing mention count: " + ex.Message);
+                return null;
+            }
+        }
+        
+        public People? UpdateType(int personId, string newType)
+        {
+            try
+            {
+                using (var connection = _db.OpenConnection())
+                {
+                    string query = "UPDATE people SET type = @type WHERE id = @id;";
+
+                    using (var command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@type", newType);
+                        command.Parameters.AddWithValue("@id", personId);
+                        command.ExecuteNonQuery();
+                    }
+
+                    return GetPersonById(personId);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error updating person type: " + ex.Message);
                 return null;
             }
         }
