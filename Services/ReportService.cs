@@ -72,6 +72,7 @@ namespace Malshinon.Services
 
             return person;
         }
+        
         private void EnsureRoleUpgrade(People person, string roleToAdd)
         {
             if (person.Type == "both" || person.Type == "potential_agent")

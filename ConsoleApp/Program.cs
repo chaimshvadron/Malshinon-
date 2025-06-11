@@ -8,7 +8,7 @@ namespace Malshinon
     {
         static void Main(string[] args)
         {
-           ReportDialog.Show();
+           Menu.Show();
         }
 
     }

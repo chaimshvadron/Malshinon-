@@ -187,7 +187,7 @@ namespace Malshinon.DAL
                 return null;
             }
         }
-        
+
         public People? UpdateDangerStatus(int personId, bool dangerStatus)
         {
             try
@@ -211,6 +211,64 @@ namespace Malshinon.DAL
                 Console.WriteLine("Error updating danger status: " + ex.Message);
                 return null;
             }
+        }
+
+        public List<People> GetPeopleByType(string type)
+        {
+            List<People> peopleList = new List<People>();
+            try
+            {
+                using (var connection = _db.OpenConnection())
+                {
+                    string query = "SELECT * FROM people WHERE type = @type;";
+                    using (var command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@type", type);
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                peopleList.Add(PeopleMapper.MapFromReader(reader));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error retrieving people by type: " + ex.Message);
+            }
+
+            return peopleList;
+        }
+        
+        public List<People> GetPeoplesByDangerStatus(bool dangerStatus)
+        {
+            List<People> peopleList = new List<People>();
+            try
+            {
+                using (var connection = _db.OpenConnection())
+                {
+                    string query = "SELECT * FROM people WHERE DangerStatus = @danger_status;";
+                    using (var command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@danger_status", dangerStatus);
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                peopleList.Add(PeopleMapper.MapFromReader(reader));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error retrieving people by danger status: " + ex.Message);
+            }
+
+            return peopleList;
         }
     }
 }
