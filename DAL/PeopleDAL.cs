@@ -3,6 +3,7 @@ using Malshinon.models;
 using MySql.Data.MySqlClient;
 using Malshinon.Utils;
 using System.Dynamic;
+using Mysqlx.Crud;
 
 namespace Malshinon.DAL
 {
@@ -39,7 +40,6 @@ namespace Malshinon.DAL
                         long insertedId = command.LastInsertedId;
                         if (insertedId > 0)
                         {
-
                             return GetPersonById((int)insertedId);
                         }
                     }
@@ -162,7 +162,7 @@ namespace Malshinon.DAL
                 return null;
             }
         }
-        
+
         public People? UpdateType(int personId, string newType)
         {
             try
@@ -184,6 +184,31 @@ namespace Malshinon.DAL
             catch (Exception ex)
             {
                 Console.WriteLine("Error updating person type: " + ex.Message);
+                return null;
+            }
+        }
+        
+        public People? UpdateDangerStatus(int personId, bool dangerStatus)
+        {
+            try
+            {
+                using (var connection = _db.OpenConnection())
+                {
+                    string query = "UPDATE people SET DangerStatus = @danger_status WHERE id = @id;";
+
+                    using (var command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@danger_status", dangerStatus);
+                        command.Parameters.AddWithValue("@id", personId);
+                        command.ExecuteNonQuery();
+                    }
+
+                    return GetPersonById(personId);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error updating danger status: " + ex.Message);
                 return null;
             }
         }

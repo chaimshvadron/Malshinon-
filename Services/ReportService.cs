@@ -11,7 +11,6 @@ namespace Malshinon.Services
         private PeopleDAL _peopleDal = new PeopleDAL();
         private IntelReportsDAL _intelReportsDal = new IntelReportsDAL();
 
-        // Submit report - receives ready People objects
         public void SubmitReport(People reporter, People target, string reportText)
         {
             IntelReport report = new IntelReport
@@ -23,13 +22,28 @@ namespace Malshinon.Services
             };
             _intelReportsDal.AddNewIntelReport(report);
 
-            _peopleDal.IncrementReportCount(reporter.Id);
-            _peopleDal.IncrementMentionCount(target.Id);
+            var PersonReorter = _peopleDal.IncrementReportCount(reporter.Id);
+            var PersonTaeget = _peopleDal.IncrementMentionCount(target.Id);
+
+            if (PersonReorter != null)
+                EnsureRoleUpgrade(PersonReorter, "reporter");
+            if (PersonTaeget != null)
+                EnsureRoleUpgrade(PersonTaeget, "target");
 
             Console.WriteLine("Report saved successfully.");
+            if (PersonReorter != null && PersonReorter.NumReports >= 10 && PersonReorter.Type != "potential_agent")
+            {
+                Console.WriteLine($"Warning: {PersonReorter.FirstName} {PersonReorter.LastName} has been reported {PersonReorter.NumReports} times!");
+                _peopleDal.UpdateType(PersonReorter.Id, "potential_agent");
+            }
+
+            if (PersonTaeget != null && PersonTaeget.NumMentions >= 20 && !PersonTaeget.DangerStatus)
+            {
+                _peopleDal.UpdateDangerStatus(PersonTaeget.Id, true);
+                Console.WriteLine($"Warning: {PersonTaeget.FirstName} {PersonTaeget.LastName} is now marked as dangerous!");
+            }
         }
 
-        // Helper: identify or create person by secret code, first name, last name, and type
         public People? GetOrCreatePerson(string? code, string? firstName, string? lastName, string type)
         {
             People? person = null;
@@ -38,12 +52,6 @@ namespace Malshinon.Services
             if (!string.IsNullOrEmpty(code))
             {
                 person = _peopleDal.GetPersonBySecretCode(code);
-
-                // If found, update type to "both" if needed
-                if (person != null && person.Type != type && person.Type != "both")
-                {
-                    person = _peopleDal.UpdateType(person.Id, "both");
-                }
             }
 
             // 2. If not found, ask for details and create new
@@ -74,6 +82,18 @@ namespace Malshinon.Services
 
             return person;
         }
+        private void EnsureRoleUpgrade(People person, string roleToAdd)
+        {
+            if (person.Type == "both" || person.Type == "potential_agent")
+                return;
+
+            if ((person.Type == "reporter" && roleToAdd == "target") ||
+                (person.Type == "target" && roleToAdd == "reporter"))
+            {
+                _peopleDal.UpdateType(person.Id, "both");
+            }
+        }
+
 
     }
 }
